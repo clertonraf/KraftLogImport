@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  kraftlog-pdf-import:
+    build: .
+    container_name: kraftlog-pdf-import
+    ports:
+      - "8081:8081"
+    environment:
+      - KRAFTLOG_API_URL=${KRAFTLOG_API_URL:-http://kraftlog-api:8080}
+      - KRAFTLOG_API_USERNAME=${KRAFTLOG_API_USERNAME:-admin}
+      - KRAFTLOG_API_PASSWORD=${KRAFTLOG_API_PASSWORD:-admin}
+      - EXERCISE_MUSCLE_GROUPS_CONFIG_PATH=/app/config/exercise-muscle-groups.yml
+    volumes:
+      - ./exercise-muscle-groups.yml:/app/config/exercise-muscle-groups.yml:ro
+    networks:
+      - kraftlog-network
+    depends_on:
+      - kraftlog-api
+    restart: unless-stopped
+
+  kraftlog-api:
+    image: kraftlog-api:latest
+    container_name: kraftlog-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=${DATABASE_URL:-jdbc:postgresql://postgres:5432/kraftlog}
+      - SPRING_DATASOURCE_USERNAME=${DATABASE_USERNAME:-kraftlog}
+      - SPRING_DATASOURCE_PASSWORD=${DATABASE_PASSWORD:-kraftlog}
+    networks:
+      - kraftlog-network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: kraftlog-postgres
+    environment:
+      - POSTGRES_DB=kraftlog
+      - POSTGRES_USER=kraftlog
+      - POSTGRES_PASSWORD=kraftlog
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - kraftlog-network
+    restart: unless-stopped
+
+networks:
+  kraftlog-network:
+    driver: bridge
+
+volumes:
+  postgres-data:

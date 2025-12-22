@@ -1,0 +1,13 @@
+# Example muscle group mapping configuration
+# Maps Portuguese muscle group names (from PDF) to English equivalents
+
+PEITO: CHEST
+COSTAS: BACK
+OMBROS: SHOULDERS
+BÍCEPS: BICEPS
+TRÍCEPS: TRICEPS
+PERNAS: LEGS
+GLÚTEOS: GLUTES
+ABDÔMEN: ABS
+ANTEBRAÇOS: FOREARMS
+PANTURRILHAS: CALVES
