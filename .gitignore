@@ -38,3 +38,7 @@ build/
 *.log
 *.tmp
 *.temp
+
+### Maven versioning backups ###
+pom.xml.versionsBackup
+*.versionsBackup
