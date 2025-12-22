@@ -82,6 +82,12 @@ public class ImportController {
                     "status", "error",
                     "message", "Failed to process PDF: " + e.getMessage()
             ));
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid input", e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "status", "error",
+                    "message", e.getMessage()
+            ));
         }
     }
 
