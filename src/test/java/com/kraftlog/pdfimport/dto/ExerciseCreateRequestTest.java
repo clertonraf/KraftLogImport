@@ -109,6 +109,7 @@ class ExerciseCreateRequestTest {
                 120.0,
                 "https://youtube.com/watch?v=deadlift",
                 "Barbell",
+                "Back",
                 List.of(muscleId)
         );
 

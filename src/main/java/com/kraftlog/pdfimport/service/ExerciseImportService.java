@@ -39,9 +39,9 @@ public class ExerciseImportService {
             try {
                 ExerciseCreateRequest request = convertToCreateRequest(parsedExercise);
                 
-                boolean success = apiClient.createExercise(request);
+                ParsedExerciseData created = apiClient.createExercise(request);
                 
-                if (success) {
+                if (created != null && created.getId() != null) {
                     result.incrementSuccess();
                 } else {
                     result.addFailure(parsedExercise.getName(), "API returned error");
@@ -71,6 +71,7 @@ public class ExerciseImportService {
         return ExerciseCreateRequest.builder()
                 .name(parsedExercise.getName())
                 .videoUrl(parsedExercise.getVideoUrl())
+                .muscleGroup(muscleGroupEnglish)
                 .build();
     }
 

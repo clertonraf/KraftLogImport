@@ -1,18 +1,19 @@
-# KraftLog PDF Import
+# KraftLog Import
 
-A standalone Spring Boot application for importing exercises from PDF files into the KraftLog API.
+A standalone Spring Boot application for importing exercises and routines into the KraftLog API.
 
 ## Overview
 
-This service parses PDF files containing exercise data (in Portuguese format) and automatically imports them into KraftLog API by calling the Exercise creation endpoint. It handles authentication, PDF parsing, and exercise data transformation.
+This service parses PDF files containing exercise data and XLSX files containing routine data (in Portuguese format) and automatically imports them into KraftLog API. It handles authentication, parsing, and data transformation.
 
 ## Features
 
 - **PDF Parsing**: Extracts exercise names, video URLs, and muscle group information from structured PDFs
-- **KraftLog API Integration**: Authenticates with KraftLog API and creates exercises one by one
+- **XLSX Parsing**: Extracts complete routine structures with workouts, exercises, sets, reps, and rest intervals
+- **KraftLog API Integration**: Authenticates with KraftLog API and creates exercises and routines
 - **Configurable**: Easy configuration for KraftLog API URL and credentials
 - **Muscle Group Mapping**: Maps Portuguese muscle group names to English equivalents
-- **RESTful API**: Provides endpoints for PDF upload and processing
+- **RESTful API**: Provides endpoints for PDF and XLSX upload and processing
 - **Swagger UI**: Interactive API documentation at `/swagger-ui.html`
 
 ## Requirements
@@ -77,7 +78,7 @@ mvn spring-boot:run
 ### Using JAR
 
 ```bash
-java -jar target/kraftlog-pdf-import-1.0.0.jar
+java -jar target/kraftlog-import-1.0.0.jar
 ```
 
 The application will start on port 8081 by default.
@@ -96,6 +97,21 @@ Example using curl:
 ```bash
 curl -X POST http://localhost:8081/api/import/pdf \
   -F "file=@exercises.pdf"
+```
+
+#### Import XLSX Routine
+- **POST** `/api/import/routine`
+- **Content-Type**: `multipart/form-data`
+- **Parameters**: 
+  - `file` (XLSX file)
+  - `username` (KraftLog user to create routine for)
+
+Example using curl:
+
+```bash
+curl -X POST http://localhost:8081/api/import/routine \
+  -F "file=@routine.xlsx" \
+  -F "username=myuser"
 ```
 
 Response:

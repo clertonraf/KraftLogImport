@@ -30,8 +30,10 @@ class ParsedExerciseDataTest {
     @Test
     void testAllArgsConstructor() {
         ParsedExerciseData data = new ParsedExerciseData(
+                "ex1",
                 "Squat",
                 "https://youtube.com/watch?v=squat",
+                "Legs",
                 "PERNAS"
         );
 

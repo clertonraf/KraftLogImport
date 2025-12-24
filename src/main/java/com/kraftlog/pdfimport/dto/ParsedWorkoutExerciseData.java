@@ -6,13 +6,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class ParsedExerciseData {
-    private String id;
-    private String name;
-    private String videoUrl;
-    private String muscleGroup;
-    private String muscleGroupPortuguese;
+public class ParsedWorkoutExerciseData {
+    private String exerciseName;
+    private Integer sets;
+    private Integer repetitions;
+    private String advancedTechnique;
 }

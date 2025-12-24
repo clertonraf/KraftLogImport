@@ -4,6 +4,11 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.kraftlog.pdfimport.service.ExerciseImportService;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -39,17 +44,16 @@ class KraftLogApiIntegrationTest {
     @Autowired
     private ExerciseImportService exerciseImportService;
 
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("kraftlog.api.base-url", () -> "http://localhost:" + wireMockServer.port());
-        registry.add("wiremock.server.port", () -> String.valueOf(wireMockServer.port()));
-    }
-
     @BeforeAll
     static void startWireMock() {
         wireMockServer = new WireMockServer(WireMockConfiguration.options().dynamicPort());
         wireMockServer.start();
         WireMock.configureFor("localhost", wireMockServer.port());
+    }
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("kraftlog.api.base-url", () -> "http://localhost:" + wireMockServer.port());
     }
 
     @AfterAll
@@ -62,6 +66,13 @@ class KraftLogApiIntegrationTest {
     @BeforeEach
     void setUp() {
         wireMockServer.resetAll();
+        
+        // Stub authentication endpoint for all tests
+        wireMockServer.stubFor(post(urlEqualTo("/api/auth/login"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"token\":\"test-token-12345\"}")));
     }
 
     @Test
@@ -70,7 +81,7 @@ class KraftLogApiIntegrationTest {
     void testSuccessfulExerciseImport() throws IOException {
         // Given: Mock KraftLog API successful response
         wireMockServer.stubFor(post(urlEqualTo("/api/exercises"))
-                .withBasicAuth("test-user", "test-password")
+                .withHeader("Authorization", equalTo("Bearer test-token-12345"))
                 .willReturn(aResponse()
                         .withStatus(201)
                         .withHeader("Content-Type", "application/json")
@@ -89,9 +100,8 @@ class KraftLogApiIntegrationTest {
             assertThat(result.getSuccessCount()).isGreaterThan(0);
             assertThat(result.getFailureCount()).isEqualTo(0);
 
-            // Verify API was called
-            wireMockServer.verify(postRequestedFor(urlEqualTo("/api/exercises"))
-                    .withBasicAuth(new com.github.tomakehurst.wiremock.matching.BasicCredentials("test-user", "test-password")));
+            // Verify API was called with at least one exercise
+            wireMockServer.verify(1, postRequestedFor(urlEqualTo("/api/exercises")));
         } finally {
             testPdf.delete();
         }
@@ -130,7 +140,7 @@ class KraftLogApiIntegrationTest {
     void testApiServerError() throws IOException {
         // Given: Mock KraftLog API server error
         wireMockServer.stubFor(post(urlEqualTo("/api/exercises"))
-                .withBasicAuth("test-user", "test-password")
+                .withHeader("Authorization", equalTo("Bearer test-token-12345"))
                 .willReturn(aResponse()
                         .withStatus(500)
                         .withHeader("Content-Type", "application/json")
@@ -159,7 +169,7 @@ class KraftLogApiIntegrationTest {
         wireMockServer.stubFor(post(urlEqualTo("/api/exercises"))
                 .inScenario("Partial Success")
                 .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
-                .withBasicAuth("test-user", "test-password")
+                .withHeader("Authorization", equalTo("Bearer test-token-12345"))
                 .willReturn(aResponse()
                         .withStatus(201)
                         .withHeader("Content-Type", "application/json")
@@ -169,7 +179,7 @@ class KraftLogApiIntegrationTest {
         wireMockServer.stubFor(post(urlEqualTo("/api/exercises"))
                 .inScenario("Partial Success")
                 .whenScenarioStateIs("FIRST_SUCCESS")
-                .withBasicAuth("test-user", "test-password")
+                .withHeader("Authorization", equalTo("Bearer test-token-12345"))
                 .willReturn(aResponse()
                         .withStatus(400)
                         .withHeader("Content-Type", "application/json")
@@ -199,7 +209,7 @@ class KraftLogApiIntegrationTest {
     void testApiTimeout() throws IOException {
         // Given: Mock API with slow response
         wireMockServer.stubFor(post(urlEqualTo("/api/exercises"))
-                .withBasicAuth("test-user", "test-password")
+                .withHeader("Authorization", equalTo("Bearer test-token-12345"))
                 .willReturn(aResponse()
                         .withStatus(201)
                         .withFixedDelay(30000) // 30 second delay
@@ -226,7 +236,7 @@ class KraftLogApiIntegrationTest {
     void testRequestFormatWithMuscleGroups() throws IOException {
         // Given: Mock API and capture request
         wireMockServer.stubFor(post(urlEqualTo("/api/exercises"))
-                .withBasicAuth("test-user", "test-password")
+                .withHeader("Authorization", equalTo("Bearer test-token-12345"))
                 .willReturn(aResponse()
                         .withStatus(201)
                         .withBody("{\"id\":1}")));
@@ -238,9 +248,8 @@ class KraftLogApiIntegrationTest {
             exerciseImportService.importExercisesFromPdf(testPdf);
 
             // Then: Verify request format
-            wireMockServer.verify(postRequestedFor(urlEqualTo("/api/exercises"))
+            wireMockServer.verify(1, postRequestedFor(urlEqualTo("/api/exercises"))
                     .withHeader("Content-Type", containing("application/json"))
-                    .withBasicAuth(new com.github.tomakehurst.wiremock.matching.BasicCredentials("test-user", "test-password"))
                     .withRequestBody(matchingJsonPath("$.name"))
                     .withRequestBody(matchingJsonPath("$.muscleGroup")));
         } finally {
@@ -254,7 +263,7 @@ class KraftLogApiIntegrationTest {
     void testEndToEndViaRestEndpoint() throws IOException {
         // Given: Mock KraftLog API
         wireMockServer.stubFor(post(urlEqualTo("/api/exercises"))
-                .withBasicAuth("test-user", "test-password")
+                .withHeader("Authorization", equalTo("Bearer test-token-12345"))
                 .willReturn(aResponse()
                         .withStatus(201)
                         .withBody("{\"id\":1,\"name\":\"Test Exercise\"}")));
@@ -283,7 +292,7 @@ class KraftLogApiIntegrationTest {
             assertThat(response.getBody()).contains("successful");
 
             // Verify API was called
-            wireMockServer.verify(atLeast(1), postRequestedFor(urlEqualTo("/api/exercises")));
+            wireMockServer.verify(1, postRequestedFor(urlEqualTo("/api/exercises")));
         } finally {
             testPdf.delete();
         }
@@ -292,33 +301,64 @@ class KraftLogApiIntegrationTest {
     // Helper methods
 
     private File createTestPdfFile() throws IOException {
-        // Create a temporary PDF with simple exercise data
+        // Create a real PDF with exercise data
         File tempFile = File.createTempFile("test-exercise-", ".pdf");
         
-        // Write a simple text file (for testing purposes)
-        String content = """
-                PEITO
-                Supino Reto
-                https://www.youtube.com/watch?v=test123
-                """;
+        try (PDDocument document = new PDDocument()) {
+            PDPage page = new PDPage();
+            document.addPage(page);
+            
+            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+                contentStream.beginText();
+                contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 12);
+                contentStream.newLineAtOffset(50, 700);
+                contentStream.showText("PEITO");
+                contentStream.newLineAtOffset(0, -20);
+                contentStream.showText("Supino Reto");
+                contentStream.newLineAtOffset(0, -20);
+                contentStream.showText("https://www.youtube.com/watch?v=test123");
+                contentStream.endText();
+            }
+            
+            document.save(tempFile);
+        }
         
-        Files.write(tempFile.toPath(), content.getBytes());
         return tempFile;
     }
 
     private File createTestPdfWithMultipleExercises() throws IOException {
         File tempFile = File.createTempFile("test-exercises-multiple-", ".pdf");
         
-        String content = """
-                PEITO
-                Supino Reto
-                https://www.youtube.com/watch?v=test123
+        try (PDDocument document = new PDDocument()) {
+            PDPage page = new PDPage();
+            document.addPage(page);
+            
+            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+                contentStream.beginText();
+                contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 12);
+                contentStream.newLineAtOffset(50, 700);
                 
-                Supino Inclinado
-                https://www.youtube.com/watch?v=test456
-                """;
+                // First exercise
+                contentStream.showText("PEITO");
+                contentStream.newLineAtOffset(0, -20);
+                contentStream.showText("Supino Reto");
+                contentStream.newLineAtOffset(0, -20);
+                contentStream.showText("https://www.youtube.com/watch?v=test1");
+                
+                // Second exercise
+                contentStream.newLineAtOffset(0, -40);
+                contentStream.showText("COSTAS");
+                contentStream.newLineAtOffset(0, -20);
+                contentStream.showText("Puxada");
+                contentStream.newLineAtOffset(0, -20);
+                contentStream.showText("https://www.youtube.com/watch?v=test2");
+                
+                contentStream.endText();
+            }
+            
+            document.save(tempFile);
+        }
         
-        Files.write(tempFile.toPath(), content.getBytes());
         return tempFile;
     }
 }

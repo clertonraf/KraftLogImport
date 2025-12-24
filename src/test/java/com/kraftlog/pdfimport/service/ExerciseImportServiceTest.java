@@ -4,12 +4,12 @@ import com.kraftlog.pdfimport.client.KraftLogApiClient;
 import com.kraftlog.pdfimport.config.MuscleGroupMappingConfig;
 import com.kraftlog.pdfimport.dto.ExerciseCreateRequest;
 import com.kraftlog.pdfimport.dto.ParsedExerciseData;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.TestPropertySource;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,24 +19,23 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@TestPropertySource(properties = {
+    "kraftlog.muscle-groups.config-path=exercise-muscle-groups.yml"
+})
 class ExerciseImportServiceTest {
 
-    @Mock
+    @MockBean
     private PdfParserService pdfParser;
 
-    @Mock
+    @MockBean
     private KraftLogApiClient apiClient;
 
-    @Mock
+    @Autowired
     private MuscleGroupMappingConfig muscleGroupConfig;
 
+    @Autowired
     private ExerciseImportService exerciseImportService;
-
-    @BeforeEach
-    void setUp() {
-        exerciseImportService = new ExerciseImportService(pdfParser, apiClient, muscleGroupConfig);
-    }
 
     @Test
     void testImportExercisesFromPdfSuccess() throws Exception {
@@ -57,7 +56,11 @@ class ExerciseImportServiceTest {
         );
 
         when(pdfParser.parseExercisesFromPdf(mockFile)).thenReturn(parsedExercises);
-        when(apiClient.createExercise(any(ExerciseCreateRequest.class))).thenReturn(true);
+        ParsedExerciseData created = ParsedExerciseData.builder()
+                .id("ex1")
+                .name("Test")
+                .build();
+        when(apiClient.createExercise(any(ExerciseCreateRequest.class))).thenReturn(created);
 
         ExerciseImportService.ImportResult result = exerciseImportService.importExercisesFromPdf(mockFile);
 
@@ -86,9 +89,13 @@ class ExerciseImportServiceTest {
         );
 
         when(pdfParser.parseExercisesFromPdf(mockFile)).thenReturn(parsedExercises);
+        ParsedExerciseData created = ParsedExerciseData.builder()
+                .id("ex1")
+                .name("Test")
+                .build();
         when(apiClient.createExercise(any(ExerciseCreateRequest.class)))
-                .thenReturn(true)
-                .thenReturn(false);
+                .thenReturn(created)
+                .thenReturn(null);
 
         ExerciseImportService.ImportResult result = exerciseImportService.importExercisesFromPdf(mockFile);
 
@@ -147,8 +154,12 @@ class ExerciseImportServiceTest {
                 .build();
 
         when(pdfParser.parseExercisesFromPdf(mockFile)).thenReturn(List.of(parsedData));
-        when(muscleGroupConfig.getMuscleGroupEnglishName("PEITO")).thenReturn("Chest");
-        when(apiClient.createExercise(any(ExerciseCreateRequest.class))).thenReturn(true);
+        // muscleGroupConfig is autowired and will use the real configuration
+        ParsedExerciseData created = ParsedExerciseData.builder()
+                .id("ex1")
+                .name("Bench Press")
+                .build();
+        when(apiClient.createExercise(any(ExerciseCreateRequest.class))).thenReturn(created);
 
         exerciseImportService.importExercisesFromPdf(mockFile);
 
@@ -168,12 +179,16 @@ class ExerciseImportServiceTest {
         ParsedExerciseData parsedData = ParsedExerciseData.builder()
                 .name("Squat")
                 .videoUrl("https://youtube.com/watch?v=test")
-                .muscleGroupPortuguese("PERNAS")
+                .muscleGroupPortuguese("UNKNOWN_MUSCLE")
                 .build();
 
         when(pdfParser.parseExercisesFromPdf(mockFile)).thenReturn(List.of(parsedData));
-        when(muscleGroupConfig.getMuscleGroupEnglishName("PERNAS")).thenReturn(null);
-        when(apiClient.createExercise(any(ExerciseCreateRequest.class))).thenReturn(true);
+        // muscleGroupConfig is autowired and will return null for unknown muscle groups
+        ParsedExerciseData created = ParsedExerciseData.builder()
+                .id("ex1")
+                .name("Squat")
+                .build();
+        when(apiClient.createExercise(any(ExerciseCreateRequest.class))).thenReturn(created);
 
         exerciseImportService.importExercisesFromPdf(mockFile);
 

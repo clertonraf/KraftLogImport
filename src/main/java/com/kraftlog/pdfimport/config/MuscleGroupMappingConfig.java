@@ -74,6 +74,10 @@ public class MuscleGroupMappingConfig {
         return muscleGroupMapping.keySet();
     }
 
+    public Map<String, String> getMuscleGroupMappings() {
+        return new HashMap<>(muscleGroupMapping);
+    }
+
     public String getMuscleGroupEnglishName(String portugueseName) {
         if (portugueseName == null) {
             return null;

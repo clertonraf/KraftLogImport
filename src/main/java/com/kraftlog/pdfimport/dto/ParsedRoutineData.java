@@ -5,14 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class ParsedExerciseData {
-    private String id;
-    private String name;
-    private String videoUrl;
-    private String muscleGroup;
-    private String muscleGroupPortuguese;
+public class ParsedRoutineData {
+    private String routineName;
+    private List<ParsedWorkoutData> workouts;
 }

@@ -32,5 +32,7 @@ public class ExerciseCreateRequest {
 
     private String equipmentType;
 
+    private String muscleGroup;
+
     private List<UUID> muscleIds;
 }

@@ -42,3 +42,5 @@ build/
 ### Maven versioning backups ###
 pom.xml.versionsBackup
 *.versionsBackup
+
+tmp/

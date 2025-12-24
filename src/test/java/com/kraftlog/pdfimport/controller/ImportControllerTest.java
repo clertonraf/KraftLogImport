@@ -1,11 +1,10 @@
 package com.kraftlog.pdfimport.controller;
 
 import com.kraftlog.pdfimport.service.ExerciseImportService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
@@ -20,18 +19,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 class ImportControllerTest {
 
-    @Mock
+    @MockBean
     private ExerciseImportService exerciseImportService;
 
+    @Autowired
     private ImportController importController;
-
-    @BeforeEach
-    void setUp() {
-        importController = new ImportController(exerciseImportService);
-    }
 
     @Test
     void testImportExercisesFromPdfSuccess() throws Exception {

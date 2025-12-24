@@ -2,27 +2,29 @@ package com.kraftlog.pdfimport.service;
 
 import com.kraftlog.pdfimport.config.MuscleGroupMappingConfig;
 import com.kraftlog.pdfimport.dto.ParsedExerciseData;
+import com.kraftlog.pdfimport.test.TestConfigHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
+@SpringBootTest
+@TestPropertySource(properties = {
+    "kraftlog.muscle-groups.config-path=exercise-muscle-groups.yml"
+})
 class PdfParserServiceTest {
 
+    @Autowired
     private PdfParserService pdfParserService;
-    private MuscleGroupMappingConfig muscleGroupConfig;
 
-    @BeforeEach
-    void setUp() {
-        muscleGroupConfig = mock(MuscleGroupMappingConfig.class);
-        when(muscleGroupConfig.getMuscleGroupHeaders()).thenReturn(Set.of("PEITO", "COSTAS", "PERNAS"));
-        pdfParserService = new PdfParserService(muscleGroupConfig);
-    }
+    @Autowired
+    private MuscleGroupMappingConfig muscleGroupConfig;
 
     @Test
     void testParseExercisesFromPdfWithNonExistentFile() {
@@ -48,39 +50,16 @@ class PdfParserServiceTest {
     }
 
     @Test
-    void testMuscleGroupConfigIsUsed() throws IOException {
-        MuscleGroupMappingConfig config = mock(MuscleGroupMappingConfig.class);
-        when(config.getMuscleGroupHeaders()).thenReturn(Set.of("PEITO"));
-        
-        PdfParserService service = new PdfParserService(config);
-        
-        // Parse a simple text to trigger config usage
-        File tempFile = File.createTempFile("test", ".pdf");
-        tempFile.deleteOnExit();
-        
-        // The config is used during parsing, not construction
-        // So we just verify the service was created successfully
-        assertNotNull(service);
-        assertEquals(config, getField(service, "muscleGroupConfig"));
-    }
-    
-    private Object getField(Object obj, String fieldName) {
-        try {
-            var field = obj.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            return field.get(obj);
-        } catch (Exception e) {
-            return null;
-        }
+    void testMuscleGroupConfigIsInjected() {
+        // Verify that Spring injected the muscle group config
+        assertNotNull(muscleGroupConfig);
+        assertNotNull(muscleGroupConfig.getMuscleGroupHeaders());
+        assertFalse(muscleGroupConfig.getMuscleGroupHeaders().isEmpty());
     }
 
     @Test
     void testServiceInitialization() {
-        MuscleGroupMappingConfig config = mock(MuscleGroupMappingConfig.class);
-        when(config.getMuscleGroupHeaders()).thenReturn(Set.of("PEITO", "COSTAS"));
-        
-        PdfParserService service = new PdfParserService(config);
-        
-        assertNotNull(service);
+        // Verify that Spring created and injected the service
+        assertNotNull(pdfParserService);
     }
 }
