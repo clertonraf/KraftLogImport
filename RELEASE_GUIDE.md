@@ -35,15 +35,15 @@
 ## Available Docker Tags
 
 After release `v1.2.3`, you can use:
-- `ghcr.io/clertonraf/kraftlog-pdf-import:1.2.3` (specific)
-- `ghcr.io/clertonraf/kraftlog-pdf-import:1.2` (minor)
-- `ghcr.io/clertonraf/kraftlog-pdf-import:1` (major)
-- `ghcr.io/clertonraf/kraftlog-pdf-import:latest` (latest stable)
+- `ghcr.io/clertonraf/kraftlog-import:1.2.3` (specific)
+- `ghcr.io/clertonraf/kraftlog-import:1.2` (minor)
+- `ghcr.io/clertonraf/kraftlog-import:1` (major)
+- `ghcr.io/clertonraf/kraftlog-import:latest` (latest stable)
 
 ## Check Build Status
 
-- **Actions**: https://github.com/clertonraf/KraftLogPDFImport/actions
-- **Images**: https://github.com/clertonraf/KraftLogPDFImport/pkgs/container/kraftlog-pdf-import
+- **Actions**: https://github.com/clertonraf/KraftLogImport/actions
+- **Images**: https://github.com/clertonraf/KraftLogImport/pkgs/container/kraftlog-import
 
 ## Rollback
 
@@ -53,7 +53,7 @@ git revert HEAD
 git push origin master
 
 # Or checkout previous version
-docker pull ghcr.io/clertonraf/kraftlog-pdf-import:1.0.0
+docker pull ghcr.io/clertonraf/kraftlog-import:1.0.0
 ```
 
 ## Notes

@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic muscle group translation
 - Batch import of exercises to KraftLog API
 - Detailed import results with success/failure tracking
-- Docker image available at `ghcr.io/clertonraf/kraftlog-pdf-import:1.0.0`
+- Docker image available at `ghcr.io/clertonraf/kraftlog-import:1.0.0`
 
 ### Technical Details
 - **Framework**: Spring Boot 3.2.1
@@ -78,5 +78,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VERSIONING.md with release strategy
 - Docker deployment instructions
 
-[Unreleased]: https://github.com/clertonraf/KraftLogPDFImport/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/clertonraf/KraftLogPDFImport/releases/tag/v1.0.0
+[Unreleased]: https://github.com/clertonraf/KraftLogImport/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/clertonraf/KraftLogImport/releases/tag/v1.0.0

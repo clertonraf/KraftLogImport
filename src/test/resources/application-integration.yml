@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: kraftlog-pdf-import-test
+    name: kraftlog-import-test
   servlet:
     multipart:
       max-file-size: 10MB

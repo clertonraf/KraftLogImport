@@ -87,7 +87,7 @@ Check the Actions tab: https://github.com/clertonraf/KraftLogPDFImport/actions
 ## Docker Image Tags in Registry
 
 You can view all available tags at:
-https://github.com/clertonraf/KraftLogPDFImport/pkgs/container/kraftlog-pdf-import
+https://github.com/clertonraf/KraftLogImport/pkgs/container/kraftlog-import
 
 ## Example Usage by Version
 
