@@ -49,28 +49,72 @@ public class PdfParserService {
         
         String[] lines = text.split("\n");
         String currentMuscleGroup = null;
+        List<String> exerciseNames = new ArrayList<>();
+        List<String> urls = new ArrayList<>();
         
+        // First pass: separate exercise names and URLs
         for (String line : lines) {
             line = line.trim();
             
             String detectedMuscleGroup = detectMuscleGroup(line);
             if (detectedMuscleGroup != null) {
+                // Process accumulated exercises before switching muscle groups
+                exercises.addAll(matchExercisesWithUrls(exerciseNames, urls, currentMuscleGroup));
+                exerciseNames.clear();
+                urls.clear();
+                
                 currentMuscleGroup = detectedMuscleGroup;
                 log.debug("Found muscle group: {}", currentMuscleGroup);
                 continue;
             }
             
-            if (line.isEmpty() || line.startsWith("EXERCÍCIO") || line.startsWith("VÍDEO")) {
+            if (line.isEmpty() || line.startsWith("EXERCÍCIO") || line.startsWith("VÍDEO") || 
+                line.contains("Execução em Vídeo") || line.startsWith("Leandro Twin") ||
+                line.startsWith("CREF:") || line.startsWith("WhatsApp:") || line.startsWith("www.")) {
                 continue;
             }
             
-            if (currentMuscleGroup != null) {
-                ParsedExerciseData exercise = parseExerciseLine(line, currentMuscleGroup);
-                if (exercise != null) {
-                    exercises.add(exercise);
-                    log.debug("Parsed exercise: {} - {}", exercise.getName(), exercise.getMuscleGroupPortuguese());
+            // Check if line contains a URL
+            Matcher urlMatcher = URL_PATTERN.matcher(line);
+            if (urlMatcher.find()) {
+                urls.add(urlMatcher.group());
+            } else if (currentMuscleGroup != null && !line.isEmpty() && line.length() >= 3) {
+                // This is likely an exercise name
+                String cleanName = cleanExerciseName(line);
+                if (!cleanName.isEmpty() && cleanName.length() >= 3) {
+                    exerciseNames.add(cleanName);
                 }
             }
+        }
+        
+        // Process remaining exercises
+        exercises.addAll(matchExercisesWithUrls(exerciseNames, urls, currentMuscleGroup));
+        
+        return exercises;
+    }
+    
+    private List<ParsedExerciseData> matchExercisesWithUrls(List<String> exerciseNames, 
+                                                            List<String> urls, 
+                                                            String muscleGroup) {
+        List<ParsedExerciseData> exercises = new ArrayList<>();
+        
+        if (muscleGroup == null) {
+            return exercises;
+        }
+        
+        // Match exercises with URLs (may have more exercises than URLs or vice versa)
+        for (int i = 0; i < exerciseNames.size(); i++) {
+            String exerciseName = exerciseNames.get(i);
+            String videoUrl = i < urls.size() ? urls.get(i) : null;
+            
+            ParsedExerciseData exercise = ParsedExerciseData.builder()
+                    .name(exerciseName)
+                    .videoUrl(videoUrl)
+                    .muscleGroupPortuguese(muscleGroup)
+                    .build();
+            
+            exercises.add(exercise);
+            log.debug("Matched exercise: {} with URL: {}", exerciseName, videoUrl);
         }
         
         return exercises;
@@ -88,39 +132,6 @@ public class PdfParserService {
         }
         
         return null;
-    }
-
-    private ParsedExerciseData parseExerciseLine(String line, String muscleGroup) {
-        Matcher urlMatcher = URL_PATTERN.matcher(line);
-        String videoUrl = null;
-        String exerciseName;
-        
-        if (urlMatcher.find()) {
-            videoUrl = urlMatcher.group();
-            int urlStart = line.indexOf(videoUrl);
-            exerciseName = line.substring(0, urlStart).trim();
-            
-            log.debug("Found URL: {}", videoUrl);
-        } else {
-            exerciseName = line.trim();
-        }
-        
-        exerciseName = cleanExerciseName(exerciseName);
-        
-        if (exerciseName.isEmpty() || exerciseName.length() < 3) {
-            return null;
-        }
-        
-        if (exerciseName.contains("http") || exerciseName.contains("youtu")) {
-            log.warn("Exercise name still contains URL fragments: {}", exerciseName);
-            return null;
-        }
-        
-        return ParsedExerciseData.builder()
-                .name(exerciseName)
-                .videoUrl(videoUrl)
-                .muscleGroupPortuguese(muscleGroup)
-                .build();
     }
 
     private String cleanExerciseName(String name) {
