@@ -266,13 +266,13 @@ public class RoutineImportService {
             workoutExercise.put("userId", userId);
             
             if (exerciseData.getSets() != null) {
-                workoutExercise.put("sets", exerciseData.getSets());
+                workoutExercise.put("recommendedSets", exerciseData.getSets());
             }
             if (exerciseData.getRepetitions() != null) {
-                workoutExercise.put("repetitions", exerciseData.getRepetitions());
+                workoutExercise.put("recommendedReps", exerciseData.getRepetitions());
             }
             if (exerciseData.getAdvancedTechnique() != null) {
-                workoutExercise.put("advancedTechnique", exerciseData.getAdvancedTechnique());
+                workoutExercise.put("trainingTechnique", exerciseData.getAdvancedTechnique());
             }
             
             kraftLogApiClient.addExerciseToWorkout(workoutExercise);
