@@ -2,6 +2,7 @@ package com.kraftlog.pdfimport.client;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.kraftlog.pdfimport.config.KraftLogApiProperties;
 import com.kraftlog.pdfimport.dto.ExerciseCreateRequest;
 import com.kraftlog.pdfimport.dto.ParsedExerciseData;
@@ -26,7 +27,8 @@ import java.util.Map;
 public class KraftLogApiClient {
 
     private final KraftLogApiProperties apiProperties;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule());
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(java.time.Duration.ofSeconds(10))
             .build();
@@ -37,7 +39,7 @@ public class KraftLogApiClient {
         String loginUrl = apiProperties.getBaseUrl() + "/api/auth/login";
         
         String loginJson = String.format(
-            "{\"username\":\"%s\",\"password\":\"%s\"}",
+            "{\"email\":\"%s\",\"password\":\"%s\"}",
             apiProperties.getAuth().getUsername(),
             apiProperties.getAuth().getPassword()
         );
@@ -107,7 +109,7 @@ public class KraftLogApiClient {
         }
         
         String encodedSearch = URLEncoder.encode(searchTerm, StandardCharsets.UTF_8);
-        String searchUrl = apiProperties.getBaseUrl() + "/api/exercises?search=" + encodedSearch;
+        String searchUrl = apiProperties.getBaseUrl() + "/api/exercises/search?query=" + encodedSearch;
         
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(searchUrl))

@@ -29,13 +29,13 @@ class ParsedExerciseDataTest {
 
     @Test
     void testAllArgsConstructor() {
-        ParsedExerciseData data = new ParsedExerciseData(
-                "ex1",
-                "Squat",
-                "https://youtube.com/watch?v=squat",
-                "Legs",
-                "PERNAS"
-        );
+        ParsedExerciseData data = ParsedExerciseData.builder()
+                .id("ex1")
+                .name("Squat")
+                .videoUrl("https://youtube.com/watch?v=squat")
+                .muscleGroup("Legs")
+                .muscleGroupPortuguese("PERNAS")
+                .build();
 
         assertEquals("Squat", data.getName());
         assertEquals("https://youtube.com/watch?v=squat", data.getVideoUrl());
